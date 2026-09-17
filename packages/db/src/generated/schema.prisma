@@ -1,0 +1,804 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated"
+  previewFeatures = ["fullTextIndex"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ========== ENUMS ==========
+
+enum UserRole {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum ShopStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  SOLD_OUT
+  EXPIRED
+  HIDDEN
+  TAKEDOWN
+}
+
+enum VariantCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  ACCEPTED
+  REJECTED
+  PACKING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  PROMPTPAY
+  CREDIT_CARD
+  CASH_ON_DELIVERY
+  BANK_TRANSFER
+}
+
+enum ShippingProvider {
+  THAILAND_POST
+  FLASH_EXPRESS
+  JNT_EXPRESS
+  KERRY_EXPRESS
+  SELF_DELIVERY
+}
+
+enum ShipmentStatus {
+  PENDING
+  PICKUP_REQUESTED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+  FAILED_DELIVERY
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  SELLER_RESPONDED
+  RESOLVED
+  ESCALATED_TO_ADMIN
+  CLOSED
+}
+
+enum DisputeResolution {
+  NONE
+  REFUND_FULL
+  REFUND_PARTIAL
+  RELEASE_TO_SELLER
+  CANCELLED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  ACTION_TAKEN
+  DISMISSED
+}
+
+enum ReportReason {
+  PROHIBITED_ITEM
+  COUNTERFEIT
+  FRAUDULENT
+  INAPPROPRIATE_CONTENT
+  SPAM
+  WRONG_CATEGORY
+  OTHER
+}
+
+enum NotificationType {
+  ORDER_PLACED
+  ORDER_ACCEPTED
+  ORDER_REJECTED
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_RECEIVED
+  REVIEW_POSTED
+  CHAT_MESSAGE
+  SYSTEM_ANNOUNCEMENT
+  LISTING_APPROVED
+  LISTING_REJECTED
+  DISPUTE_UPDATE
+  PAYOUT_COMPLETED
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+  PREMIUM
+}
+
+enum BoostType {
+  FEATURED
+  TOP_OF_FEED
+  CATEGORY_HIGHLIGHT
+}
+
+// ========== MODELS ==========
+
+model User {
+  id          String    @id @default(cuid())
+  phone       String    @unique
+  email       String?   @unique
+  fullName    String?
+  avatarUrl   String?
+  role        UserRole  @default(USER)
+  isVerified  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  shops         Shop[]
+  orders        Order[]        @relation("BuyerOrders")
+  reviews       Review[]
+  messages      Message[]
+  notifications Notification[]
+  savedListings SavedListing[]
+  searchAlerts  SearchAlert[]
+  payouts       Payout[]
+  disputes      Dispute[]      @relation("DisputeCreator")
+  reports       Report[]
+  ChatThread    ChatThread[]
+
+  @@index([phone])
+  @@index([email])
+  @@map("users")
+}
+
+model Shop {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id])
+  name            String
+  slug            String     @unique
+  description     String?
+  logoUrl         String?
+  coverImageUrl   String?
+  status          ShopStatus @default(PENDING)
+  categoryIds     String[]
+  province        String
+  district        String
+  subdistrict     String?
+  postalCode      String
+  addressLine     String?
+  latitude        Decimal?
+  longitude       Decimal?
+  phone           String?
+  lineId          String?
+  facebookUrl     String?
+  instagramUrl    String?
+  isVerified      Boolean    @default(false)
+  verifiedAt      DateTime?
+  avgRating       Decimal    @default(0)
+  totalReviews    Int        @default(0)
+  totalSales      Int        @default(0)
+  responseTimeMin Int?
+  responseTimeMax Int?
+  opensAt         String?
+  closesAt        String?
+  planType        PlanType   @default(FREE)
+  planExpiresAt   DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  listings    Listing[]
+  orders      Order[]
+  reviews     Review[]
+  wallet      Wallet?
+  chatThreads ChatThread[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+  @@index([province])
+  @@index([categoryIds])
+  @@map("shops")
+}
+
+model Listing {
+  id                   String           @id @default(cuid())
+  shopId               String
+  shop                 Shop             @relation(fields: [shopId], references: [id])
+  title                String
+  description          String
+  status               ListingStatus    @default(DRAFT)
+  categoryId           String
+  category             Category         @relation(fields: [categoryId], references: [id])
+  condition            VariantCondition @default(NEW)
+  priceSatang          Int
+  originalPriceSatang  Int?
+  stock                Int              @default(1)
+  sku                  String?
+  weightGram           Int?
+  dimensions           Json?
+  images               Json
+  videoUrl             String?
+  isCodAllowed         Boolean          @default(true)
+  shippingFromProvince String
+  shippingDaysMin      Int?
+  shippingDaysMax      Int?
+  views                Int              @default(0)
+  saves                Int              @default(0)
+  soldCount            Int              @default(0)
+  publishedAt          DateTime?
+  expiresAt            DateTime?
+  takedownReason       String?
+  takedownAt           DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  variants   Variant[]
+  orderItems OrderItem[]
+  boosts     Boost[]
+  reports    Report[]
+  savedBy    SavedListing[]
+
+  @@index([shopId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([priceSatang])
+  @@index([shippingFromProvince])
+  // Full-text search will be implemented via pg_trgm extension instead
+  @@map("listings")
+}
+
+model Variant {
+  id              String      @id @default(cuid())
+  listingId       String
+  listing         Listing     @relation(fields: [listingId], references: [id])
+  name            String
+  value           String
+  priceDiffSatang Int         @default(0)
+  stock           Int         @default(0)
+  sku             String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  OrderItem       OrderItem[]
+
+  @@unique([listingId, name, value])
+  @@index([listingId])
+  @@map("variants")
+}
+
+model Category {
+  id         String     @id @default(cuid())
+  nameTh     String
+  nameEn     String
+  slug       String     @unique
+  parentId   String?
+  parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryHierarchy")
+  imageUrl   String?
+  iconSvg    String?
+  level      Int        @default(0)
+  orderIndex Int        @default(0)
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  listings Listing[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([level])
+  @@map("categories")
+}
+
+model Order {
+  id                  String            @id @default(cuid())
+  orderNumber         String            @unique
+  buyerId             String
+  buyer               User              @relation("BuyerOrders", fields: [buyerId], references: [id])
+  shopId              String
+  shop                Shop              @relation(fields: [shopId], references: [id])
+  status              OrderStatus       @default(PENDING_PAYMENT)
+  items               OrderItem[]
+  subtotalSatang      Int
+  shippingFeeSatang   Int
+  discountSatang      Int               @default(0)
+  platformFeeSatang   Int               @default(0)
+  totalSatang         Int
+  paymentMethod       PaymentMethod?
+  paymentStatus       PaymentStatus     @default(PENDING)
+  payments            Payment[]
+  shippingProvider    ShippingProvider?
+  shipmentStatus      ShipmentStatus    @default(PENDING)
+  trackingNumber      String?
+  shippingName        String
+  shippingPhone       String
+  shippingAddressLine String
+  shippingSubdistrict String
+  shippingDistrict    String
+  shippingProvince    String
+  shippingPostalCode  String
+  shippingLatitude    Decimal?
+  shippingLongitude   Decimal?
+  notes               String?
+  sellerNotes         String?
+  cancelledAt         DateTime?
+  cancelReason        String?
+  paidAt              DateTime?
+  acceptedAt          DateTime?
+  rejectedAt          DateTime?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  dispute Dispute?
+  review  Review?
+
+  @@index([buyerId])
+  @@index([shopId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String   @id @default(cuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  listingId        String
+  listing          Listing  @relation(fields: [listingId], references: [id])
+  variantId        String?
+  variant          Variant? @relation(fields: [variantId], references: [id])
+  quantity         Int
+  priceSatang      Int
+  totalPriceSatang Int
+  createdAt        DateTime @default(now())
+
+  @@index([orderId])
+  @@index([listingId])
+  @@map("order_items")
+}
+
+model Payment {
+  id                 String        @id @default(cuid())
+  orderId            String
+  order              Order         @relation(fields: [orderId], references: [id])
+  amountSatang       Int
+  method             PaymentMethod
+  status             PaymentStatus @default(PENDING)
+  gateway            String?
+  gatewayTxId        String?
+  gatewayData        Json?
+  qrCodeUrl          String?
+  receiptUrl         String?
+  failureReason      String?
+  capturedAt         DateTime?
+  refundedAt         DateTime?
+  refundAmountSatang Int?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([gatewayTxId])
+  @@map("payments")
+}
+
+model Wallet {
+  id            String   @id @default(cuid())
+  shopId        String   @unique
+  shop          Shop     @relation(fields: [shopId], references: [id])
+  balanceSatang Int      @default(0)
+  pendingSatang Int      @default(0)
+  currency      String   @default("THB")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  transactions WalletTransaction[]
+  payouts      Payout[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id                 String   @id @default(cuid())
+  walletId           String
+  wallet             Wallet   @relation(fields: [walletId], references: [id])
+  type               String
+  amountSatang       Int
+  balanceAfterSatang Int
+  referenceType      String?
+  referenceId        String?
+  description        String
+  metadata           Json?
+  createdAt          DateTime @default(now())
+
+  @@index([walletId])
+  @@index([referenceType, referenceId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
+}
+
+model Payout {
+  id              String    @id @default(cuid())
+  walletId        String
+  wallet          Wallet    @relation(fields: [walletId], references: [id])
+  amountSatang    Int
+  status          String    @default("PENDING")
+  bankName        String
+  bankAccount     String
+  bankAccountName String
+  requestedAt     DateTime  @default(now())
+  processedAt     DateTime?
+  paidAt          DateTime?
+  failedAt        DateTime?
+  failureReason   String?
+  gatewayTxId     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  User            User?     @relation(fields: [userId], references: [id])
+  userId          String?
+
+  @@index([walletId])
+  @@index([status])
+  @@map("payouts")
+}
+
+model ChatThread {
+  id            String    @id @default(cuid())
+  shopId        String
+  shop          Shop      @relation(fields: [shopId], references: [id])
+  buyerId       String
+  buyer         User      @relation(fields: [buyerId], references: [id])
+  listingId     String?
+  lastMessageAt DateTime?
+  lastMessage   String?
+  unreadCount   Int       @default(0)
+  isArchived    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  messages Message[]
+
+  @@unique([shopId, buyerId, listingId])
+  @@index([shopId])
+  @@index([buyerId])
+  @@index([lastMessageAt])
+  @@map("chat_threads")
+}
+
+model Message {
+  id          String     @id @default(cuid())
+  threadId    String
+  thread      ChatThread @relation(fields: [threadId], references: [id])
+  senderId    String
+  sender      User       @relation(fields: [senderId], references: [id])
+  content     String
+  messageType String     @default("TEXT")
+  metadata    Json?
+  isRead      Boolean    @default(false)
+  readAt      DateTime?
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Review {
+  id                 String    @id @default(cuid())
+  orderId            String    @unique
+  order              Order     @relation(fields: [orderId], references: [id])
+  listingId          String
+  shopId             String
+  shop               Shop      @relation(fields: [shopId], references: [id])
+  buyerId            String
+  buyer              User      @relation(fields: [buyerId], references: [id])
+  rating             Int
+  comment            String?
+  images             Json?
+  sellerReply        String?
+  sellerRepliedAt    DateTime?
+  isVisible          Boolean   @default(true)
+  isVerifiedPurchase Boolean   @default(true)
+  helpfulCount       Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([shopId])
+  @@index([buyerId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  type         NotificationType
+  title        String
+  body         String
+  link         String?
+  metadata     Json?
+  isRead       Boolean          @default(false)
+  readAt       DateTime?
+  sentViaPush  Boolean          @default(false)
+  sentViaEmail Boolean          @default(false)
+  sentViaSms   Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
+  @@map("saved_listings")
+}
+
+model SearchAlert {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  query      String
+  filters    Json?
+  frequency  String    @default("INSTANT")
+  lastSentAt DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([isActive])
+  @@map("search_alerts")
+}
+
+model Boost {
+  id            String    @id @default(cuid())
+  listingId     String
+  listing       Listing   @relation(fields: [listingId], references: [id])
+  type          BoostType
+  durationHours Int
+  costSatang    Int
+  startsAt      DateTime  @default(now())
+  endsAt        DateTime
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  @@index([listingId])
+  @@index([endsAt])
+  @@map("boosts")
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  listingId    String?
+  listing      Listing?     @relation(fields: [listingId], references: [id])
+  reporterId   String
+  reporter     User         @relation(fields: [reporterId], references: [id])
+  reason       ReportReason
+  details      String?
+  evidenceUrls Json?
+  status       ReportStatus @default(PENDING)
+  resolvedById String?
+  resolvedAt   DateTime?
+  resolution   String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([listingId])
+  @@index([reporterId])
+  @@index([status])
+  @@map("reports")
+}
+
+model Dispute {
+  id                 String            @id @default(cuid())
+  orderId            String            @unique
+  order              Order             @relation(fields: [orderId], references: [id])
+  openedById         String
+  openedBy           User              @relation("DisputeCreator", fields: [openedById], references: [id])
+  reason             String
+  description        String
+  evidenceUrls       Json?
+  status             DisputeStatus     @default(OPEN)
+  resolution         DisputeResolution @default(NONE)
+  refundAmountSatang Int?
+  resolvedById       String?
+  resolvedAt         DateTime?
+  resolutionNotes    String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  messages DisputeMessage[]
+
+  @@index([orderId])
+  @@index([status])
+  @@map("disputes")
+}
+
+model DisputeMessage {
+  id          String   @id @default(cuid())
+  disputeId   String
+  dispute     Dispute  @relation(fields: [disputeId], references: [id])
+  senderId    String
+  content     String
+  attachments Json?
+  isAdmin     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([disputeId])
+  @@map("dispute_messages")
+}
+
+model OutboxEvent {
+  id          String    @id @default(cuid())
+  eventType   String
+  payload     Json
+  isProcessed Boolean   @default(false)
+  processedAt DateTime?
+  error       String?
+  retryCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@index([isProcessed])
+  @@index([createdAt])
+  @@map("outbox_events")
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  actorType    String?
+  action       String
+  resourceType String
+  resourceId   String?
+  changes      Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([resourceType, resourceId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Banner {
+  id              String   @id @default(cuid())
+  title           String
+  imageUrl        String
+  linkUrl         String?
+  position        String
+  categoryId      String?
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean  @default(true)
+  clickCount      Int      @default(0)
+  impressionCount Int      @default(0)
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([position])
+  @@index([isActive])
+  @@map("banners")
+}
+
+model CMSPage {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  titleTh        String
+  titleEn        String
+  contentTh      String
+  contentEn      String
+  excerptTh      String?
+  excerptEn      String?
+  coverImageUrl  String?
+  authorId       String?
+  isPublished    Boolean   @default(false)
+  publishedAt    DateTime?
+  viewCount      Int       @default(0)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@map("cms_pages")
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String
+  role         String
+  permissions  String[]
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("admin_users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+model OTP {
+  id        String    @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  isUsed    Boolean   @default(false)
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([phone])
+  @@map("otps")
+}
