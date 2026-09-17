@@ -1,0 +1,72 @@
+```
+# Dependencies
+node_modules/
+.pnpm-store/
+.npm/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Generated files
+packages/db/src/generated/
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Cache directories
+.cache/
+.node_modules/
+.yarn/
+.pnp.*
+.pnp.loader.mjs
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python (if any Python parts)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Lock files
+pnpm-lock.yaml
+
+# Prisma
+prisma/migrations/
+prisma/schema.prisma.bak
+
+# TypeScript
+*.tsbuildinfo
+```

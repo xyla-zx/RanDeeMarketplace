@@ -1,0 +1,135 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "listing": {
+    "card": {
+      "saveButton": "Save this listing",
+      "savedButton": "Saved",
+      "soldOut": "Sold out",
+      "discount": "{percent}% off",
+      "stockLeft": "{count, plural, one {# item left} other {# items left}}"
+    },
+    "compose": {
+      "titleLabel": "Listing title",
+      "titleHelp": "Include color, size, and material for up to 40% better sales",
+      "publishAction": "Publish listing",
+      "publishing": "Publishing",
+      "published": "Published",
+      "saveDraft": "Save draft",
+      "step1Title": "Photos & Title",
+      "step2Title": "Price & Details",
+      "step3Title": "Shipping & Publish"
+    }
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "phoneLabel": "Phone number",
+    "phonePlaceholder": "08X XXX XXXX",
+    "otpLabel": "Verification code",
+    "otpResend": "Resend code",
+    "otpExpiresIn": "Expires in {seconds}s"
+  },
+  "shop": {
+    "follow": "Follow shop",
+    "following": "Following",
+    "chat": "Message seller",
+    "viewProducts": "View all products",
+    "noProducts": "No products yet",
+    "startSelling": "Create first listing"
+  },
+  "cart": {
+    "empty": "Your cart is empty",
+    "browseFeed": "Browse feed",
+    "checkout": "Checkout",
+    "total": "Total"
+  },
+  "order": {
+    "status": {
+      "awaiting_payment": "Awaiting payment",
+      "paid": "Paid",
+      "accepted": "Accepted",
+      "packed": "Packed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "disputed": "Disputed"
+    }
+  },
+  "empty": {
+    "noListings": {
+      "title": "No products in shop yet",
+      "description": "Start with an easy-to-sell item. Takes less than 3 minutes.",
+      "action": "Create first listing"
+    },
+    "cartEmpty": {
+      "title": "Your cart is empty",
+      "description": "Check out what's trending now",
+      "action": "Browse feed"
+    },
+    "noSearchResults": {
+      "title": "No results for \"{query}\"",
+      "description": "Try shorter keywords or remove some filters",
+      "action": "Clear filters"
+    },
+    "noChat": {
+      "title": "No conversations yet",
+      "description": "When someone messages about your products, they'll appear here"
+    },
+    "noOrders": {
+      "title": "No orders yet",
+      "description": "Try bumping your most-viewed listings",
+      "action": "View my listings"
+    },
+    "noNotifications": {
+      "title": "Nothing new",
+      "description": "We'll notify you when someone messages or your orders update"
+    }
+  },
+  "errors": {
+    "outOfStock": "Only {available} left. Reduce quantity and try again.",
+    "slugTaken": "This name is taken. Try {suggestion}",
+    "otpInvalid": "Invalid code. {n} attempts remaining.",
+    "otpExpired": "Code expired. Request a new one.",
+    "fileTooLarge": "File is {size} MB. Maximum is 12 MB. Try reducing image size.",
+    "planLimitReached": "Current plan allows {limit} listings. Close old ones or upgrade.",
+    "paymentDeclined": "Bank declined this transaction. Try another card or PromptPay.",
+    "qrExpired": "QR expired. Generate a new one to continue payment.",
+    "insufficientBalance": "Can withdraw up to ฿{available}. ฿{pending} available on {date}.",
+    "rateLimited": "Try again in {seconds} seconds.",
+    "shopSuspended": "This shop is temporarily suspended. Products cannot be ordered.",
+    "contentBlocked": "This listing contains prohibited items. See our prohibited items list.",
+    "serverError": "Temporary system issue. Try again. If persists, contact support with code {traceId}."
+  },
+  "success": {
+    "published": "Published",
+    "draftSaved": "Draft saved",
+    "offerSent": "Offer sent. Waiting for seller response.",
+    "orderPlaced": "Order placed successfully",
+    "paymentSuccess": "Payment successful",
+    "orderAccepted": "Order accepted. Ships by {date}",
+    "trackingAdded": "Tracking number added",
+    "deliveryConfirmed": "Delivery confirmed. Funds transferred to seller.",
+    "payoutRequested": "Withdrawal requested. Arrives by {date}",
+    "reportSubmitted": "Report submitted. Team will review within 24 hours."
+  }
+}
