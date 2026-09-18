@@ -789,6 +789,18 @@ model Session {
   @@map("sessions")
 }
 
+model OTPVerification {
+  id        String    @id @default(cuid())
+  phone     String    @unique
+  code      String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([phone])
+  @@map("otp_verifications")
+}
+
 model OTP {
   id        String    @id @default(cuid())
   phone     String

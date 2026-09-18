@@ -2,6 +2,9 @@ import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@randee/db"
 import bcrypt from "bcryptjs"
+import Google from "next-auth/providers/google"
+import Facebook from "next-auth/providers/facebook"
+import Line from "next-auth/providers/line"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -11,6 +14,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/auth/error",
   },
   providers: [
+    // OAuth Providers
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    Facebook({
+      clientId: process.env.FACEBOOK_CLIENT_ID!,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+    }),
+    Line({
+      clientId: process.env.LINE_CLIENT_ID!,
+      clientSecret: process.env.LINE_CLIENT_SECRET!,
+      issuer: "https://access.line.me",
+    }),
+    // Credentials (Email/Password)
     {
       id: "credentials",
       name: "Credentials",
@@ -78,10 +96,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user, trigger, session, account }) {
       if (user) {
         token.id = user.id
         token.emailVerified = user.emailVerified
+      }
+
+      if (account) {
+        token.provider = account.provider
+        token.providerAccountId = account.providerAccountId
       }
 
       if (trigger === "update" && session) {
@@ -94,6 +117,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string
         session.user.emailVerified = token.emailVerified as string | null
+        session.user.provider = token.provider as string | null
+        session.user.providerAccountId = token.providerAccountId as string | null
       }
       return session
     },
